@@ -26,7 +26,6 @@ namespace Image2DesmosGUI
 
         Mat image;
         VideoCapture video;
-
         Mode currentMode = Mode.None;
 
         public Form1()
@@ -108,12 +107,16 @@ namespace Image2DesmosGUI
             {
                 Point[] temp = Decimate(contour);
                 Point center = new Point(temp.Sum(x => x.X) / temp.Length, temp.Sum(x => x.Y) / temp.Length);
+
                 if (temp.Any(x => x.DistanceTo(center) > clumpSize))
                 {
                     for (int i = 0; i < temp.Length; i++)
                     {
-                        temp[i].X = temp[i].X * sSize.Width / image.Width;
-                        temp[i].Y = temp[i].Y * sSize.Height / image.Height;
+                        temp[i].X *= sSize.Width;
+                        temp[i].Y *= sSize.Height;
+
+                        temp[i].X /= image.Width;
+                        temp[i].Y /= image.Height;
                     }
 
                     decimated.Add(temp);
@@ -132,9 +135,10 @@ namespace Image2DesmosGUI
 
             Point[][] curves = ComputeCurves();
 
-            label11.Text = "line count: " + curves.Length;
             Mat preview = Mat.Zeros(sSize.Height, sSize.Width, MatType.CV_8UC1);
             preview.DrawContours(curves, -1, new Scalar(255, 255, 0, 255));
+
+            label11.Text = "line count: " + curves.Length;
             Preview.Image = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(preview);
         }
 
@@ -170,25 +174,6 @@ namespace Image2DesmosGUI
             return Math.Abs(A * (b.Y - a.Y) + B * (a.X - b.X)) / Math.Sqrt(A * A + B * B);
         }
 
-        private string GenerateCommand(Point[] contours, int id)
-        {
-            string xlist = "calculator.setExpression({id: '" + id + "', type: 'table', columns: [{latex: 'x', values: [";
-            string ylist = "]}, {latex: 'y', values: [";
-
-            foreach (var contour in contours)
-            {
-                xlist += $"'{contour.X}', ";
-                ylist += $"'{sSize.Height - contour.Y}', ";
-            }
-
-            return xlist + ylist + "], color: \"#000000\", points: false, lines: true}]})";
-        }
-
-        private string GenerateEmpty(int id)
-        {
-            return "calculator.setExpression({ id: " + id + ", type: 'table', columns: [{latex: ' '}]})";
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             if (currentMode == Mode.None) return;
@@ -197,38 +182,24 @@ namespace Image2DesmosGUI
                 if (currentMode == Mode.Image)
                 {
                     string fileName = @"output.txt";
+
                     for (int i = 1; File.Exists(fileName); i++)
                     {
-                        fileName = @$"output{i}.txt";
+                        fileName = @$"output ({i}).txt";
                     }
-                    OutputToFile(fileName);
+
+                    OutputImage(fileName);
                 }
                 else if (currentMode == Mode.Video)
                 {
                     string dirName = @"output";
+
                     for (int i = 1; Directory.Exists(dirName); i++)
                     {
-                        dirName = @$"output{i}";
-                    }
-                    Directory.CreateDirectory(dirName);
-
-                    int cmax = 0;
-
-                    video.Set(VideoCaptureProperties.PosFrames, 0);
-                    for (int i = 0; i < video.FrameCount - 1; i++)
-                    {
-                        int c = ComputeCurves().Length;
-                        if (c > cmax)
-                        {
-                            cmax = c;
-                        }
+                        dirName = @$"output ({i})";
                     }
 
-                    video.Set(VideoCaptureProperties.PosFrames, 0);
-                    for (int i = 0; i < video.FrameCount - 1; i++)
-                    {
-                        OutputToFile(@$"{dirName}/{i}.txt", cmax);
-                    }
+                    OutputVideo(dirName);
                 }
             }
             catch (Exception ex)
@@ -241,22 +212,89 @@ namespace Image2DesmosGUI
             }
         }
 
-        private void OutputToFile(string fileName, int max = 0)
+        private void OutputImage(string fileName)
         {
-            using (StreamWriter sw = new StreamWriter(File.Create(fileName)))
+            Point[][] curves = ComputeCurves();
+
+            using (StreamWriter sw = File.CreateText(fileName))
             {
-                Point[][] curves = ComputeCurves();
-                for (int i = 0; i < curves.Length; i++)
+                sw.WriteLine("calculator.setExpressions([");
+
+                foreach (var curve in curves)
                 {
-                    sw.WriteLine(GenerateCommand(curves[i], i));
+                    string xValues = "";
+                    string yValues = "";
+
+                    foreach (var point in curve)
+                    {
+                        xValues += $"'{point.X}', ";
+                        yValues += $"'{sSize.Height - point.Y}', ";
+                    }
+
+                    sw.WriteLine($"{{type: 'table', columns: [{{latex: 'x', values: [{xValues}]}}, {{latex: 'y', values: [{yValues}], color: '#000000', points: false, lines: true}}]}}, ");
                 }
 
-                if (max > curves.Length)
+                sw.WriteLine("])");
+            }
+        }
+
+        private void OutputVideo(string dirName)
+        {
+            video.Set(VideoCaptureProperties.PosFrames, 0);
+            Directory.CreateDirectory(dirName);
+            List<int> counts = new();
+
+            for (int i = 1; i < video.FrameCount; i++)
+            {
+                Point[][] curves = ComputeCurves();
+                counts.Add(curves.Length);
+
+                using (StreamWriter sw = File.CreateText(@$"{dirName}/{i}.txt"))
                 {
-                    for (int i = curves.Length; i < max; i++)
+                    sw.WriteLine("calculator.setExpressions([");
+
+                    for (int j = 0; j < counts[^1]; j++)
                     {
-                        sw.WriteLine(GenerateEmpty(i));
+                        string xValues = "";
+                        string yValues = "";
+
+                        foreach (var point in curves[j])
+                        {
+                            xValues += $"'{point.X}', ";
+                            yValues += $"'{sSize.Height - point.Y}', ";
+                        }
+                        sw.WriteLine($"{{id: {j}, type: 'table', columns: [{{latex: 'x', values: [{xValues}]}}, {{latex: 'y', values: [{yValues}]}}]}}, ");
                     }
+                }
+            }
+
+            int max = counts.Max();
+
+            using (StreamWriter sw = File.CreateText(@$"{dirName}/0.txt"))
+            {
+                sw.WriteLine("calculator.setExpressions([");
+
+                for (int i = 0; i < max; i++)
+                {
+                    sw.WriteLine($"{{id: {i}, type: 'table', columns: [{{latex: 'x', values: []}}, {{latex: 'y', values: [], color: '#000000', points: false, lines: true}}]}}, ");
+                }
+
+                sw.WriteLine("])");
+            }
+
+            for (int i = 1; i < video.FrameCount; i++)
+            {
+                using (StreamWriter sw = File.AppendText(@$"{dirName}/{i}.txt"))
+                {
+                    if (counts[i - 1] < max)
+                    {
+                        for (int j = counts[i - 1]; j < max; j++)
+                        {
+                            sw.WriteLine($"{{id: {j}, type: 'table', columns: [{{latex: 'x', values: []}}, {{latex: 'y', values: []}}]}}, ");
+                        }
+                    }
+
+                    sw.WriteLine("])");
                 }
             }
         }
