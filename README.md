@@ -18,4 +18,4 @@ Steps to putting an image onto the normal desmos
 9. Done!
 
 # Links
-[.net 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+[.NET Runtime 5.0](https://dotnet.microsoft.com/download/dotnet/5.0/runtime)
