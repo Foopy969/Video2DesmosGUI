@@ -16,3 +16,6 @@ Steps to putting an image onto the normal desmos
 7. Type `var calculator = window.Calc` and enter
 8. Paste and enter
 9. Done!
+
+# Links
+[.net 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
