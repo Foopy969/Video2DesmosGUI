@@ -52,6 +52,7 @@ namespace Image2DesmosGUI
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.numericUpDown6 = new System.Windows.Forms.NumericUpDown();
+            this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.Preview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
@@ -187,7 +188,7 @@ namespace Image2DesmosGUI
             0});
             this.numericUpDown1.Location = new System.Drawing.Point(314, 460);
             this.numericUpDown1.Maximum = new decimal(new int[] {
-            25,
+            64,
             0,
             0,
             0});
@@ -273,11 +274,6 @@ namespace Image2DesmosGUI
             0,
             131072});
             this.numericUpDown5.Location = new System.Drawing.Point(314, 495);
-            this.numericUpDown5.Maximum = new decimal(new int[] {
-            10,
-            0,
-            0,
-            0});
             this.numericUpDown5.Name = "numericUpDown5";
             this.numericUpDown5.Size = new System.Drawing.Size(60, 23);
             this.numericUpDown5.TabIndex = 23;
@@ -320,23 +316,38 @@ namespace Image2DesmosGUI
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(380, 499);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(68, 15);
+            this.label10.Size = new System.Drawing.Size(66, 15);
             this.label10.TabIndex = 27;
-            this.label10.Text = "Min Length";
+            this.label10.Text = "Clump Size";
             // 
             // numericUpDown6
             // 
             this.numericUpDown6.Location = new System.Drawing.Point(454, 495);
+            this.numericUpDown6.Maximum = new decimal(new int[] {
+            256,
+            0,
+            0,
+            0});
             this.numericUpDown6.Name = "numericUpDown6";
             this.numericUpDown6.Size = new System.Drawing.Size(60, 23);
             this.numericUpDown6.TabIndex = 28;
             this.numericUpDown6.ValueChanged += new System.EventHandler(this.Options_Changed);
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(15, 81);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(72, 15);
+            this.label11.TabIndex = 29;
+            this.label11.Text = "line count: 0";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(667, 532);
+            this.Controls.Add(this.label11);
             this.Controls.Add(this.numericUpDown6);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.label9);
@@ -401,6 +412,7 @@ namespace Image2DesmosGUI
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.NumericUpDown numericUpDown6;
+        private System.Windows.Forms.Label label11;
     }
 }
 

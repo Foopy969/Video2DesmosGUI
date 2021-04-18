@@ -22,7 +22,7 @@ namespace Image2DesmosGUI
         double threshold1 = 177;
         double threshold2 = 255;
         double epsilon = 0.1;
-        int minLength = 0;
+        int clumpSize = 0;
 
         Mat image;
         VideoCapture video;
@@ -84,7 +84,7 @@ namespace Image2DesmosGUI
             threshold1 = (int)numericUpDown3.Value;
             threshold2 = (int)numericUpDown4.Value;
             epsilon = (double)numericUpDown5.Value;
-            minLength = (int)numericUpDown6.Value;
+            clumpSize = (int)numericUpDown6.Value;
             UpdatePreview();
         }
 
@@ -97,8 +97,7 @@ namespace Image2DesmosGUI
             }
 
             Point[][] contours = new Point[][] { };
-            Mat resize = image.Resize(sSize);
-            Mat blur = resize.GaussianBlur(kSize, sigmaX);
+            Mat blur = image.GaussianBlur(kSize, sigmaX);
             Mat canny = blur.Canny(threshold1, threshold2);
 
             canny.FindContours(out contours, out var hierarchy, RetrievalModes.Tree, ContourApproximationModes.ApproxSimple);
@@ -107,8 +106,18 @@ namespace Image2DesmosGUI
 
             foreach (var contour in contours)
             {
-                if (contour.Length > minLength)
-                    decimated.Add(Decimate(contour));
+                Point[] temp = Decimate(contour);
+                Point center = new Point(temp.Sum(x => x.X) / temp.Length, temp.Sum(x => x.Y) / temp.Length);
+                if (temp.Any(x => x.DistanceTo(center) > clumpSize))
+                {
+                    for (int i = 0; i < temp.Length; i++)
+                    {
+                        temp[i].X = temp[i].X * sSize.Width / image.Width;
+                        temp[i].Y = temp[i].Y * sSize.Height / image.Height;
+                    }
+
+                    decimated.Add(temp);
+                }
             }
 
             return decimated.ToArray();
@@ -121,8 +130,11 @@ namespace Image2DesmosGUI
                 video.Set(VideoCaptureProperties.PosFrames, trackBar1.Value);
             }
 
+            Point[][] curves = ComputeCurves();
+
+            label11.Text = "line count: " + curves.Length;
             Mat preview = Mat.Zeros(sSize.Height, sSize.Width, MatType.CV_8UC1);
-            preview.DrawContours(ComputeCurves(), -1, new Scalar(255, 255, 0, 255));
+            preview.DrawContours(curves, -1, new Scalar(255, 255, 0, 255));
             Preview.Image = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(preview);
         }
 
