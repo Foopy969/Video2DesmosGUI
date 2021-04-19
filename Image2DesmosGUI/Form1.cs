@@ -63,7 +63,10 @@ namespace Image2DesmosGUI
             {
                 MessageBox.Show("Format Not Supported", "Error");
                 currentMode = Mode.None;
+                image = Mat.Zeros(sSize.Height, sSize.Width, MatType.CV_8UC1);
                 label9.Text = "frame count: 0";
+                label11.Text = "line count: 0";
+                label12.Text = "point count: 0";
                 return;
             }
             UpdatePreview();
@@ -96,7 +99,8 @@ namespace Image2DesmosGUI
             }
 
             Point[][] contours = new Point[][] { };
-            Mat blur = image.GaussianBlur(kSize, sigmaX);
+            Mat resize = image.Resize(sSize);
+            Mat blur = resize.GaussianBlur(kSize, sigmaX);
             Mat canny = blur.Canny(threshold1, threshold2);
 
             canny.FindContours(out contours, out var hierarchy, RetrievalModes.Tree, ContourApproximationModes.ApproxSimple);
@@ -110,15 +114,6 @@ namespace Image2DesmosGUI
 
                 if (temp.Any(x => x.DistanceTo(center) > clumpSize))
                 {
-                    for (int i = 0; i < temp.Length; i++)
-                    {
-                        temp[i].X *= sSize.Width;
-                        temp[i].Y *= sSize.Height;
-
-                        temp[i].X /= image.Width;
-                        temp[i].Y /= image.Height;
-                    }
-
                     decimated.Add(temp);
                 }
             }
@@ -139,6 +134,7 @@ namespace Image2DesmosGUI
             preview.DrawContours(curves, -1, new Scalar(255, 255, 0, 255));
 
             label11.Text = "line count: " + curves.Length;
+            label12.Text = "point count: " + curves.Sum(x => x.Length);
             Preview.Image = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(preview);
         }
 

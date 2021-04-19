@@ -53,6 +53,7 @@ namespace Image2DesmosGUI
             this.label10 = new System.Windows.Forms.Label();
             this.numericUpDown6 = new System.Windows.Forms.NumericUpDown();
             this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.Preview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
@@ -342,11 +343,21 @@ namespace Image2DesmosGUI
             this.label11.TabIndex = 29;
             this.label11.Text = "line count: 0";
             // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(15, 100);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(81, 15);
+            this.label12.TabIndex = 30;
+            this.label12.Text = "point count: 0";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(667, 532);
+            this.Controls.Add(this.label12);
             this.Controls.Add(this.label11);
             this.Controls.Add(this.numericUpDown6);
             this.Controls.Add(this.label10);
@@ -413,6 +424,7 @@ namespace Image2DesmosGUI
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.NumericUpDown numericUpDown6;
         private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label12;
     }
 }
 
