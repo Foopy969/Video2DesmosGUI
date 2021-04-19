@@ -2,7 +2,7 @@
 Converts videos or images to desmos expressions
 
 # Video
-[![accomanying video](https://img.youtube.com/vi/xPjT2h1OaGo/0.jpg)](https://www.youtube.com/watch?v=xPjT2h1OaGo)
+[![accomanying video](https://img.youtube.com/vi/mh7-yWKFNuY/0.jpg)](https://www.youtube.com/watch?v=mh7-yWKFNuY)
 
 # Screenshots
 ![Image of App](https://github.com/Foopy969/Video2DesmosGUI/blob/master/screenshot1.png)
