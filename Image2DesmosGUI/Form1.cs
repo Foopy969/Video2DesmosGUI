@@ -1,6 +1,7 @@
 ﻿using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,7 +14,7 @@ namespace Image2DesmosGUI
     public partial class Form1 : Form
     {
         readonly string[] SUPPORTED_IMAGE_FORMATS = new string[] { ".bmp", ".dib", ".jpeg", ".jpg", ".jpe", ".jp2", ".png", ".webp", ".pbm", ".pgm", ".ppm", ".pxm", ".pnm", ".pfm", ".sr", ".ras", ".tiff", ".tif", ".exr", ".hdr", ".pic" };
-        readonly string[] SUPPORTED_VIDEO_FORMATS = new string[] { ".avi", ".mp4"}; //I can't find the list ;-;
+        readonly string[] SUPPORTED_VIDEO_FORMATS = new string[] { ".avi", ".mp4" }; //I can't find the list ;-;
 
         //options
         Size sSize = new Size(0, 0);
@@ -103,18 +104,17 @@ namespace Image2DesmosGUI
             Mat blur = resize.GaussianBlur(kSize, sigmaX);
             Mat canny = blur.Canny(threshold1, threshold2);
 
-            canny.FindContours(out contours, out var hierarchy, RetrievalModes.Tree, ContourApproximationModes.ApproxSimple);
+            canny.FindContours(out contours, out var hierarchy, RetrievalModes.Tree, ContourApproximationModes.ApproxTC89KCOS);
 
-            List<Point[]> decimated = new();
+            Stack<Point[]> decimated = new();
 
             foreach (var contour in contours)
             {
-                Point[] temp = Decimate(contour);
-                Point center = new Point(temp.Sum(x => x.X) / temp.Length, temp.Sum(x => x.Y) / temp.Length);
+                Point[] tmp = Decimate(contour);
 
-                if (temp.Any(x => x.DistanceTo(center) > clumpSize))
+                if (tmp.Any(x => x.DistanceTo(tmp[0]) > clumpSize))
                 {
-                    decimated.Add(temp);
+                    decimated.Push(tmp);
                 }
             }
 
@@ -165,9 +165,27 @@ namespace Image2DesmosGUI
 
         private double PerpendicularDistance(Point a, Point b, Point c)
         {
-            double A = b.X - c.X;
-            double B = b.Y - c.Y;
+            int A = b.X - c.X;
+            int B = b.Y - c.Y;
             return Math.Abs(A * (b.Y - a.Y) + B * (a.X - b.X)) / Math.Sqrt(A * A + B * B);
+        }
+
+        private bool RectangleCheck(Point a, Point b, Point c, Point d)
+        {
+            double theta = Math.Atan2(c.Y - d.Y, c.X - d.X);
+            double cos = Math.Cos(theta);
+            double sin = Math.Sin(theta);
+            int A = d.X - c.X;
+            int B = d.Y - c.Y;
+
+            return B * (a.Y - d.Y) < A * (d.X - a.X) 
+                && B * (a.Y - c.Y) > A * (c.X - a.X) 
+                && cos * (c.Y - a.Y - cos) < sin * (b.X - a.X + sin)
+                && cos * (a.Y - d.Y - cos) < sin * (a.X - d.X + sin)
+                && B * (b.Y - d.Y) < A * (d.X - b.X)
+                && B * (b.Y - c.Y) > A * (c.X - b.X)
+                && cos * (c.Y - b.Y - cos) < sin * (b.X - b.X + sin)
+                && cos * (b.Y - d.Y - cos) < sin * (b.X - d.X + sin);
         }
 
         private void button1_Click(object sender, EventArgs e)
